@@ -57,16 +57,21 @@ def preprocess_text_input(text):
     return text
 
 model = CatBoostClassifier()
-model.load_model("Running Model/catboost_Pemodelan Catboost dengan TF-IDF.cbm")
-vectorizer = joblib.load("Running Model/tfidf_vectorizer_Pemodelan Catboost dengan TF-IDF.pkl")
+model.load_model("../Running Model/catboost_Pemodelan Catboost dengan TF-IDF.cbm")
+vectorizer = joblib.load("../Running Model/tfidf_vectorizer_Pemodelan Catboost dengan TF-IDF.pkl")
 
-label_mapping = {0: ('Negatif', 'red'), 1: ('Netral', 'yellow'), 2: ('Positif', 'green')}
+label_mapping = {
+    0: ('Negatif', 'red'), 
+    1: ('Netral', 'gray'),    
+    2: ('Positif', '#4C7766')  
+}
+
 
 st.markdown(
     """
     <style>
-        body {
-            background: linear-gradient(to bottom, steelblue 50%, lightgrey 50%);
+        .stApp {
+            background: linear-gradient(to bottom, #EBE6E0 55%, #4C7766 55%) !important;
         }
     </style>
     """,
@@ -74,23 +79,35 @@ st.markdown(
 )
 
 st.title("Dashboard Sentimen Analisis")
-st.write("Masukkan teks untuk memprediksi sentimen menggunakan model CatBoost.")
+st.write("Dashboard ini dapat digunakan untuk memprediksi sentimen berdasarkan inputan dari pengguna. Model klasifikasi yang digunakan, dibangun menggunakan algoritma CatBoost dengan ekstraksi fitur TF-IDF.")
 
-user_input = st.text_area("Masukkan teks : ")
+# Inisialisasi session state jika belum ada
+if "user_input" not in st.session_state:
+    st.session_state.user_input = ""
 
-col1, col2 = st.columns([1, 1])
-with col1:
-    predict_button = st.button("Prediksi")
-with col2:
-    clear_button = st.button("Bersihkan Input")
+# Custom CSS untuk shadow
+st.markdown(
+    """
+    <style>
+    .stTextArea textarea {
+        box-shadow: 1em rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        padding: 10px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
-if clear_button:
-    user_input = ""
-    st.rerun()
+# Input dengan shadow
+st.session_state.user_input = st.text_area("Masukkan teks :", st.session_state.user_input)
+
+predict_button = st.button("Prediksi")
 
 if predict_button:
-    if user_input:
-        processed_text = preprocess_text_input(user_input)
+    if st.session_state.user_input:
+        processed_text = preprocess_text_input(st.session_state.user_input)
         text_tfidf = vectorizer.transform([processed_text])
         prediction = model.predict(text_tfidf)
         predicted_label, color = label_mapping[int(prediction[0])]
